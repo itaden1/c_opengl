@@ -1,2 +1,4 @@
 build/*
 gl3w-master/*
+lib/*
+.DS_Store
