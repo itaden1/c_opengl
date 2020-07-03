@@ -9,6 +9,7 @@
 #endif
 
 #include "gameWindow.h"
+#include "shaders.h"
 
 
 int main(void)
@@ -46,51 +47,12 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
 
-    const GLchar* vertex_shader =
-    "#version 410\n"
-    "layout (location = 0) in vec3 vp;"
-    "void main() {"
-    "    gl_Position = vec4(vp.x ,vp.y, vp.z, 1.0);"
-    "}\0";
-
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertex_shader, NULL);
-    glCompileShader(vertexShader);
-
-    int success;
-    char infolog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
+    GLuint shader_program = buildShaderProgram();
+    if (!shader_program)
     {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infolog);
-        printf("Error compiling vertex shader %s\n", infolog);
+        destroyWindow();
+        return 1;
     }
-
-    const GLchar* fragment_shader = 
-    "#version 410\n"
-    "out vec4 frag_colour;"
-    "void main() {"
-    "    frag_colour = vec4(0.5, 0.0, 0.5, 1.0);"
-    "}\0";
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragment_shader, NULL);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infolog);
-        printf("Error compiling vertex shader %s\n", infolog);
-    }
-
-    GLuint shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertexShader);
-    glAttachShader(shader_program, fragmentShader);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader); 
 
     while (!quit)
     {
@@ -106,7 +68,11 @@ int main(void)
         }
         // rendering
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        float timeValue = SDL_GetTicks() * 0.001;
+        float greenVal = (sin(timeValue) / 2.0f) + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shader_program, "ourColor");
         glUseProgram(shader_program);
+        glUniform4f(vertexColorLocation, 0.0f, greenVal, 0.0f, 1.0f);
         glBindVertexArray(vertexArrayObject);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         SDL_GL_SwapWindow(window);
